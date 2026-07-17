@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Env / secrets
+.env
+*.env.local
+
+# Vector DB / embeddings artifacts (regeneratable, often large/binary)
+src/embeddings/index/
+src/embeddings/*.faiss
+src/embeddings/*.pkl
+
+# Logs
+logs/
+*.log
+conversation_logs/*.json
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Large raw data (optional: uncomment if you'd rather not version the HTML/JSON corpus)
+# data/html/
+# data/json/
