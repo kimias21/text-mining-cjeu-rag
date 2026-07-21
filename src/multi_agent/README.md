@@ -5,6 +5,7 @@
   (`agricultural` or `environmental`). Uses the domain-specific FAISS index
   built in Step 2, which already includes the 6 cross-domain judgments, so
   neither specialist misses them.
+- `../knowledge_graph/graph_tools.py` (bonus, optional) — both DomainAgents auto-pick up a 4th `expand_via_graph` tool if the Knowledge Graph has been built, deliberately not domain-restricted so it can surface the environmental↔agricultural bridge a domain-scoped search would miss; see `src/knowledge_graph/README.md`.
 - `supervisor.py` — `Supervisor`: has no direct corpus access. Its only
   tools are `consult_agricultural_agent` / `consult_environmental_agent`,
   each of which runs a full `DomainAgent.answer()` internally. The

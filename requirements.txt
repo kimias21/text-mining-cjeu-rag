@@ -8,12 +8,11 @@ sentence-transformers
 numpy
 
 # --- Agents / LLM orchestration (Steps 3-4) ---
-openai            # or anthropic, depending on the generative model you choose
-langchain         # optional, if you build on top of it rather than from scratch
+google-genai       # Gemini API -- free tier, no credit card required
 tiktoken
 
 # --- Chat interface (Step 5) ---
-streamlit         # or flask/fastapi, depending on your chosen UI approach
+streamlit
 
 # --- Evaluation dashboard (Step 6) ---
 pandas
@@ -21,5 +20,5 @@ openpyxl          # for the results_exam_june_2026 Excel export
 ragas             # if using the official RAGAS library rather than reimplementing metrics
 
 # --- Bonus: Knowledge Graph ---
-networkx          # in-memory graph option
-# neo4j           # uncomment if using a dedicated graph database instead
+networkx           # in-memory graph (chosen over Neo4j -- see src/knowledge_graph/README.md)
+# neo4j             # uncomment if using a dedicated graph database instead

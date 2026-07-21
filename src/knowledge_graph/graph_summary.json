@@ -1,0 +1,25 @@
+{
+  "n_nodes": 2897,
+  "n_edges": 14221,
+  "node_types": {
+    "Judgment": 273,
+    "LegalDomain": 2,
+    "ThematicArea": 11,
+    "MemberState": 29,
+    "Chamber": 12,
+    "Instrument": 711,
+    "Provision": 1845,
+    "LegalPrinciple": 14
+  },
+  "edge_types": {
+    "in_domain": 279,
+    "concerns": 429,
+    "referred_by": 269,
+    "decided_by": 273,
+    "interprets_instrument": 1485,
+    "interprets": 5476,
+    "cites": 296,
+    "belongs_to": 5476,
+    "invokes": 238
+  }
+}

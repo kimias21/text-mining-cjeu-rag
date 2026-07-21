@@ -61,6 +61,11 @@ def _domain_scoped_tools(domain: str):
         "get_case_by_number": base_tools.get_case_by_number,
         "list_cases_by_filter": list_cases_by_filter,
     }
+    # Bonus: graph expansion is deliberately NOT domain-restricted -- its value
+    # (per the exam guide) is precisely in surfacing related judgments across
+    # the environmental/agricultural boundary that a domain-scoped search would miss.
+    if getattr(base_tools, "_GRAPH_AVAILABLE", False):
+        tools["expand_via_graph"] = base_tools.TOOLS["expand_via_graph"]
 
     schemas = []
     for schema in base_tools.TOOL_SCHEMAS:

@@ -21,6 +21,17 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "src" / "embeddings"))
 from retriever import Retriever  # noqa: E402
 
+# Optional bonus tool (Sec. 8 of the exam guide) -- only wired in if the
+# Knowledge Graph has actually been built (src/knowledge_graph/build_graph.py).
+# Falls back to no-op cleanly if it hasn't, so this module still imports and
+# both agent systems still work without the bonus.
+sys.path.insert(0, str(REPO_ROOT / "src" / "knowledge_graph"))
+try:
+    from graph_tools import expand_via_graph, EXPAND_VIA_GRAPH_SCHEMA
+    _GRAPH_AVAILABLE = True
+except Exception:
+    _GRAPH_AVAILABLE = False
+
 MANIFEST_PATH = REPO_ROOT / "data" / "json" / "manifest.json"
 JSON_ROOT = REPO_ROOT / "data" / "json"
 
@@ -107,6 +118,8 @@ TOOLS = {
     "get_case_by_number": get_case_by_number,
     "list_cases_by_filter": list_cases_by_filter,
 }
+if _GRAPH_AVAILABLE:
+    TOOLS["expand_via_graph"] = expand_via_graph
 
 TOOL_SCHEMAS = [
     {
@@ -161,3 +174,5 @@ TOOL_SCHEMAS = [
         },
     },
 ]
+if _GRAPH_AVAILABLE:
+    TOOL_SCHEMAS.append(EXPAND_VIA_GRAPH_SCHEMA)

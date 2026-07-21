@@ -47,6 +47,23 @@ proxy for iterating during development, not a substitute.
 | Answer relevancy | _pending official evaluation_ | _pending official evaluation_ |
 | Answer correctness | _pending official evaluation_ | _pending official evaluation_ |
 
+## Knowledge Graph bonus: with vs. without (guide Sec. 8 requirement)
+
+The guide asks for RAGAS metrics obtained **with and without** the
+Knowledge Graph, so its actual contribution can be assessed rather than
+assumed. To produce this: run `batch_run.py` once with
+`src/knowledge_graph/graph.json` absent/unbuilt (the `expand_via_graph`
+tool is simply not offered to the agents in that case) and once with it
+built (`python src/knowledge_graph/build_graph.py` first), then compare.
+
+| Metric | Single-agent, no KG | Single-agent, with KG | Multi-agent, no KG | Multi-agent, with KG |
+|---|---|---|---|---|
+| Context precision* | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
+| Faithfulness* | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
+| Answer relevancy | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
+| Answer correctness | not computable without reference | not computable without reference | not computable without reference | not computable without reference |
+| Avg. latency (s) | _TBD_ | _TBD_ | _TBD_ | _TBD_ (expect higher: extra tool calls) |
+
 ## Discussion (fill in after results are available)
 
 - **Strengths/weaknesses of each approach:** _e.g. does the multi-agent

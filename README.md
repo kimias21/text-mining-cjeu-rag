@@ -13,13 +13,13 @@ Starter code baseline: [RAG_4_Scratch](https://github.com/Al-Moccardi/RAG_4_Scra
 ## Status
 
 - [x] **Step 1 — HTML → JSON conversion & metadata extraction** (`src/ingestion/`)
-- [ ] Step 2 — Embeddings & vector database construction (`src/embeddings/`)
-- [ ] Step 3 — Task A: single-agent ReAct system (`src/single_agent/`)
-- [ ] Step 4 — Task B: multi-agent system with supervisor (`src/multi_agent/`)
-- [ ] Step 5 — Chat interface & conversation logging (`src/chat_interface/`)
-- [ ] Step 6 — Evaluation dashboard (RAGAS-style metrics) (`src/evaluation/`)
-- [ ] Step 7 — Documentation: flowcharts, architecture write-up, performance table, slides (`docs/`)
-- [ ] Bonus — Knowledge-Graph-augmented generation
+- [x] **Step 2 — Embeddings & vector database construction** (`src/embeddings/`)
+- [x] **Step 3 — Task A: single-agent ReAct system** (`src/single_agent/`)
+- [x] **Step 4 — Task B: multi-agent system with supervisor** (`src/multi_agent/`)
+- [x] **Step 5 — Chat interface & conversation logging** (`src/chat_interface/`)
+- [x] **Step 6 — Evaluation dashboard (RAGAS-style metrics)** (`src/evaluation/`)
+- [x] **Step 7 — Documentation: flowcharts, architecture write-up, performance table, slides** (`docs/`) — results still TBD pending batch run + official evaluation
+- [x] **Bonus — Knowledge-Graph-augmented generation** (`src/knowledge_graph/`) — `expand_via_graph` wired into both agent systems as an optional 4th tool; RAGAS with-vs-without comparison still TBD (see `docs/performance_table.md`)
 
 ## Repository structure
 
@@ -69,6 +69,26 @@ Re-run the ingestion step (only needed if the raw HTML changes):
 
 ```bash
 python src/ingestion/parse_judgments.py
+```
+
+Build the chunk store and FAISS indices (needed once, or whenever the JSON
+corpus / chunking strategy / embedding model changes -- this downloads the
+embedding model weights on first run, so it needs internet access and may
+take a few minutes):
+
+```bash
+cd src/embeddings
+python chunker.py       # data/embeddings/chunks.jsonl
+python build_index.py   # src/embeddings/index/{global,agricultural,environmental}.faiss + .meta.json
+python retriever.py "your test query here"   # quick sanity check
+```
+
+Build the Knowledge Graph (bonus, optional -- both agent systems work fine
+without it; running this just adds a 4th `expand_via_graph` tool):
+
+```bash
+cd src/knowledge_graph
+python build_graph.py
 ```
 
 ## Evaluation

@@ -10,9 +10,14 @@ venv/
 *.env.local
 
 # Vector DB / embeddings artifacts (regeneratable, often large/binary)
+data/embeddings/
 src/embeddings/index/
 src/embeddings/*.faiss
 src/embeddings/*.pkl
+
+# Knowledge Graph artifacts (regeneratable via build_graph.py)
+src/knowledge_graph/graph.json
+src/knowledge_graph/graph.gpickle
 
 # Logs
 logs/
