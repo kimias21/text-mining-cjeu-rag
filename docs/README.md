@@ -9,8 +9,13 @@
   + official evaluation), with instructions for filling it in from the
   evaluation dashboard
 
-Still to do for the full Step 7 deliverable: the slide deck (guide Sec.
-7.3) — dataset structure & data manipulation, both architectures' key
-design choices, internal evaluation results, and (when available) the
-official evaluation outcome, ending in a critical assessment of which
-routing strategy is more promising for scaling to more legal domains.
+- `slides/CJEU_RAG_presentation.pptx` — slide deck (dataset structure &
+  data manipulation, both architectures' key design choices, models used,
+  evaluation approach, results table with placeholders, critical
+  assessment). **Fill in the "TBD" cells on the results slide and the
+  critical-assessment slide's open question** once `batch_run.py` has been
+  run for both systems and (later) the official evaluation is back.
+
+Still to do for the full Step 7 deliverable: nothing structurally — just
+keep the results slide and performance_table.md in sync as real numbers
+come in from the dashboard and the official evaluation.
