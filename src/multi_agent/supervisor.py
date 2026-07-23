@@ -28,7 +28,7 @@ from google.genai import types
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "src" / "common"))
-from gemini_utils import to_gemini_tool  # noqa: E402
+from gemini_utils import to_gemini_tool, generate_with_retry  # noqa: E402
 from domain_agent import DomainAgent  # noqa: E402
 
 SUPERVISOR_SYSTEM_PROMPT = """You are the supervisor of a legal research system covering \
@@ -107,8 +107,8 @@ class Supervisor:
         consulted_domains = []
 
         for step in range(max_steps):
-            response = self.client.models.generate_content(
-                model=self.model_name, contents=contents, config=self.config,
+            response = generate_with_retry(
+                self.client, model=self.model_name, contents=contents, config=self.config,
             )
             calls = response.function_calls or []
 
@@ -153,8 +153,8 @@ class Supervisor:
 
         contents.append(types.Content(role="user", parts=[types.Part.from_text(
             text="Please give your final synthesized answer now, based on the specialist responses gathered so far.")]))
-        response = self.client.models.generate_content(
-            model=self.model_name, contents=contents,
+        response = generate_with_retry(
+            self.client, model=self.model_name, contents=contents,
             config=types.GenerateContentConfig(system_instruction=SUPERVISOR_SYSTEM_PROMPT),
         )
         trace.append({"step": max_steps, "type": "final_answer_forced", "content": response.text})

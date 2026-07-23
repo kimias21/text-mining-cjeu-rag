@@ -1,9 +1,11 @@
 # Comparative performance table
 
 Per the exam guide (Sec. 7.2), this table reports RAGAS metrics for the two
-architectures. **Fill in the numeric columns after running `batch_run.py`
-for both systems and reviewing the dashboard** (`src/evaluation/dashboard.py`);
-placeholders below show the intended shape and are NOT results.
+architectures. **Internal numbers below are real**, from running
+`batch_run.py` for both systems against the guide's 20 example questions on
+2026-07-23 (`results_exam_june_2026/results_single_agent.xlsx` and
+`results_multi_agent.xlsx`) and reading the aggregate comparison off
+`src/evaluation/dashboard.py`.
 
 ## Internal evaluation (guide's 20 example questions, no disclosed ground truth)
 
@@ -17,13 +19,13 @@ implemented in `metrics.py`, not the literal RAGAS metric.
 
 | Metric | Single-agent (Task A) | Multi-agent (Task B) | Notes |
 |---|---|---|---|
-| Context precision* (proxy: context utilization — fraction of retrieved case numbers actually cited) | _fill in from dashboard_ | _fill in from dashboard_ | Proxy only |
+| Context precision* (proxy: context utilization — fraction of retrieved case numbers actually cited) | 0.740 | 0.716 | Proxy only |
 | Context recall | not computable without reference answers | not computable without reference answers | Needs ground truth |
-| Faithfulness* (proxy: citation consistency — fraction of cited case numbers that were genuinely retrieved) | _fill in from dashboard_ | _fill in from dashboard_ | Proxy only; optional LLM-judge score available via `metrics.faithfulness_llm_judge` |
-| Answer relevancy (embedding similarity, question vs. answer) | _fill in from dashboard_ | _fill in from dashboard_ | |
+| Faithfulness* (proxy: citation consistency — fraction of cited case numbers that were genuinely retrieved) | 0.974 | 0.958 | Proxy only; optional LLM-judge score available via `metrics.faithfulness_llm_judge` |
+| Answer relevancy (embedding similarity, question vs. answer) | 0.803 | 0.785 | |
 | Answer correctness | not computable without reference answers | not computable without reference answers | Needs ground truth |
-| Avg. latency (s) | _fill in from dashboard_ | _fill in from dashboard_ | Multi-agent is expected to be slower (sequential specialist consultations) |
-| Abstention rate (Q20-style questions) | _fill in from dashboard_ | _fill in from dashboard_ | |
+| Avg. latency (s) | 44.9 | 27.3 | **Confounded** — see note below; both include Gemini free-tier rate-limit wait time, and the single-agent run includes one outlier question (Q18, "what is the latest judgment") whose retrieval strategy returned a very large source list |
+| Abstention rate (Q20-style questions) | 0.20 (4/20) | 0.10 (2/20) | Detected via phrase matching (`looks_like_abstention`), not manually verified per-question |
 
 **How to fill this in:**
 ```bash
@@ -64,17 +66,45 @@ built (`python src/knowledge_graph/build_graph.py` first), then compare.
 | Answer correctness | not computable without reference | not computable without reference | not computable without reference | not computable without reference |
 | Avg. latency (s) | _TBD_ | _TBD_ | _TBD_ | _TBD_ (expect higher: extra tool calls) |
 
-## Discussion (fill in after results are available)
+## Discussion
 
-- **Strengths/weaknesses of each approach:** _e.g. does the multi-agent
-  system's "consult both when ambiguous" rule measurably help on
-  cross-domain questions (guide's Q02, Q04, Q09 style) at the cost of
-  latency? Does the single agent's unified index ever mis-route a
-  domain-specific question that a forced specialist wouldn't?_
-- **Abstention behavior (Q20-style):** _did either system hallucinate a
-  case citation instead of admitting the corpus lacks a direct answer?_
-- **Scaling assessment:** _which routing strategy seems more tractable if
-  more legal domains were added beyond environmental/agricultural — does
-  the multi-agent supervisor pattern scale more cleanly by just adding
-  another `DomainAgent` + one more `consult_*` tool, versus the
-  single-agent's filters becoming an ever-larger enum?_
+- **Both systems score similarly on faithfulness/relevancy proxies** —
+  single-agent slightly ahead on citation consistency (0.974 vs 0.958) and
+  answer relevancy (0.803 vs 0.785), but the gap is small enough that I
+  wouldn't call one architecture clearly more faithful than the other on
+  this sample.
+- **Average latency looks like a big single-agent penalty (44.9s vs
+  27.3s) but this number is confounded and shouldn't be read as "multi-
+  agent is faster."** Both runs hit Gemini's free-tier rate limit multiple
+  times, and the retry waits (tens of seconds each) are counted inside the
+  logged latency — which questions happened to trigger a rate-limit pause
+  was essentially down to timing, not architecture. On top of that, the
+  single-agent run has one clear outlier: Q18 ("what is the latest
+  judgment in this collection") took 660s because the agent called
+  `list_cases_by_filter` with no filters and got back nearly the entire
+  279-judgment manifest as "sources," which also explains single-agent's
+  much higher `avg_num_sources` (15.75 vs multi-agent's 2.4) — that's not
+  15 genuinely relevant documents per question on average, it's this one
+  question dragging the average up. **Before citing the latency numbers in
+  the final report, I should exclude Q18 or note it explicitly, and ideally
+  re-run outside of a rate-limited period to get a cleaner comparison.**
+- **Abstention rate**: single-agent abstained (or gave a hedged
+  "not addressed by the corpus"-style answer) on 4/20 questions, multi-
+  agent on 2/20. This is measured by simple phrase matching, not manually
+  checked — worth spot-checking a few of these by hand before trusting the
+  number, since a false negative (an answer that hedges without using one
+  of the listed phrases) or false positive (a legitimately partial answer
+  mis-flagged as an abstention) are both plausible with a phrase-matching
+  approach.
+- **Scaling assessment**: not something this internal run can answer
+  directly — it only exercises two domains. The structural argument still
+  stands from the design: the multi-agent supervisor pattern scales by
+  adding one `DomainAgent` + one `consult_*` tool per new domain, versus
+  the single agent's filter parameters becoming an ever-larger enum. The
+  real test would be adding a third domain and observing whether the
+  supervisor's routing logic degrades.
+- **What I'd actually want before the final submission**: a rerun outside
+  a period where the free-tier rate limit is being hit repeatedly (e.g.
+  spread across a longer window, or with a paid tier), and either
+  excluding or specifically discussing the Q18 outlier rather than letting
+  it dominate the latency/source-count averages.

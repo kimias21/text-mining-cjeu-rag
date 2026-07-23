@@ -31,7 +31,7 @@ from google import genai
 from google.genai import types
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "common"))
-from gemini_utils import to_gemini_tool  # noqa: E402
+from gemini_utils import to_gemini_tool, generate_with_retry  # noqa: E402
 
 from tools import TOOLS, TOOL_SCHEMAS
 
@@ -79,8 +79,8 @@ class SingleAgent:
         sources = set()
 
         for step in range(max_steps):
-            response = self.client.models.generate_content(
-                model=self.model_name, contents=contents, config=self.config,
+            response = generate_with_retry(
+                self.client, model=self.model_name, contents=contents, config=self.config,
             )
             calls = response.function_calls or []
 
@@ -120,8 +120,8 @@ class SingleAgent:
         # Ran out of steps without a final answer -- force one.
         contents.append(types.Content(role="user", parts=[types.Part.from_text(
             text="Please give your final answer now, based on the evidence gathered so far.")]))
-        response = self.client.models.generate_content(
-            model=self.model_name, contents=contents,
+        response = generate_with_retry(
+            self.client, model=self.model_name, contents=contents,
             config=types.GenerateContentConfig(system_instruction=SYSTEM_PROMPT),
         )
         trace.append({"step": max_steps, "type": "final_answer_forced", "content": response.text})
