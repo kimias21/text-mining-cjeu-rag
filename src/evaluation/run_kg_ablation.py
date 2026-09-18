@@ -213,10 +213,24 @@ def _update_performance_table(results: dict):
         (r"\| Avg\. latency \(s\) \|.*\|\s*$",
          row("| Avg. latency (s) |", "avg_latency_seconds", "expect higher -- extra tool calls")),
     ]
+    # Bug fix (found 2026-09-19): this used to scan the WHOLE file and
+    # replace every line matching any pattern, with no notion of "this
+    # pattern already matched once, stop." docs/performance_table.md has
+    # THREE tables (Internal evaluation, Official evaluation, this one) that
+    # reuse row labels like "Answer relevancy" and "Avg. latency (s)" --
+    # the unscoped loop silently overwrote the Internal-evaluation table's
+    # real latency numbers and the Official-evaluation table's placeholder
+    # row with this table's content. Now scoped to only the lines between
+    # this section's own heading and the next "## " heading.
     lines = text.splitlines()
-    for i, line in enumerate(lines):
+    section_start = next((i for i, l in enumerate(lines) if l.startswith("## Knowledge Graph bonus")), None)
+    if section_start is None:
+        print(f"NOTE: '## Knowledge Graph bonus' section not found in {PERF_TABLE} -- can't fill it in safely. Results:\n{results}")
+        return
+    section_end = next((i for i in range(section_start + 1, len(lines)) if lines[i].startswith("## ")), len(lines))
+    for i in range(section_start, section_end):
         for pattern, new_line in replacements:
-            if re.match(pattern, line):
+            if re.match(pattern, lines[i]):
                 lines[i] = new_line
                 break
     text = "\n".join(lines) + "\n"
