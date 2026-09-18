@@ -14,6 +14,7 @@ Tools:
                           answered without hitting the vector index at all
 """
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -25,12 +26,21 @@ from retriever import Retriever  # noqa: E402
 # Knowledge Graph has actually been built (src/knowledge_graph/build_graph.py).
 # Falls back to no-op cleanly if it hasn't, so this module still imports and
 # both agent systems still work without the bonus.
+#
+# DISABLE_KG=1 forces this off even when the graph *is* built -- this is the
+# switch src/evaluation/run_kg_ablation.py flips between runs to produce the
+# guide's required "with vs. without the Knowledge Graph" RAGAS comparison
+# (Sec. 8): each condition is a separate process, so the tool list an agent
+# is built with is fixed for its whole run, never toggled mid-loop.
 sys.path.insert(0, str(REPO_ROOT / "src" / "knowledge_graph"))
-try:
-    from graph_tools import expand_via_graph, EXPAND_VIA_GRAPH_SCHEMA
-    _GRAPH_AVAILABLE = True
-except Exception:
+if os.environ.get("DISABLE_KG"):
     _GRAPH_AVAILABLE = False
+else:
+    try:
+        from graph_tools import expand_via_graph, EXPAND_VIA_GRAPH_SCHEMA
+        _GRAPH_AVAILABLE = True
+    except Exception:
+        _GRAPH_AVAILABLE = False
 
 MANIFEST_PATH = REPO_ROOT / "data" / "json" / "manifest.json"
 JSON_ROOT = REPO_ROOT / "data" / "json"

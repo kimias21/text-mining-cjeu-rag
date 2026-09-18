@@ -24,7 +24,7 @@ implemented in `metrics.py`, not the literal RAGAS metric.
 | Faithfulness* (proxy: citation consistency — fraction of cited case numbers that were genuinely retrieved) | 0.974 | 0.958 | Proxy only; optional LLM-judge score available via `metrics.faithfulness_llm_judge` |
 | Answer relevancy (embedding similarity, question vs. answer) | 0.803 | 0.785 | |
 | Answer correctness | not computable without reference answers | not computable without reference answers | Needs ground truth |
-| Avg. latency (s) | 44.9 | 27.3 | **Confounded** — see note below; both include Gemini free-tier rate-limit wait time, and the single-agent run includes one outlier question (Q18, "what is the latest judgment") whose retrieval strategy returned a very large source list |
+| Avg. latency (s) | 9.051 | 9.982 | _not run_ | _not run_ (expect higher -- extra tool calls) |
 | Abstention rate (Q20-style questions) | 0.20 (4/20) | 0.10 (2/20) | Detected via phrase matching (`looks_like_abstention`), not manually verified per-question |
 
 **How to fill this in:**
@@ -46,7 +46,7 @@ proxy for iterating during development, not a substitute.
 | Context precision | _pending official evaluation_ | _pending official evaluation_ |
 | Context recall | _pending official evaluation_ | _pending official evaluation_ |
 | Faithfulness | _pending official evaluation_ | _pending official evaluation_ |
-| Answer relevancy | _pending official evaluation_ | _pending official evaluation_ |
+| Answer relevancy | 0.782 | 0.803 | _not run_ | _not run_ |
 | Answer correctness | _pending official evaluation_ | _pending official evaluation_ |
 
 ## Knowledge Graph bonus: with vs. without (guide Sec. 8 requirement)
@@ -60,11 +60,11 @@ built (`python src/knowledge_graph/build_graph.py` first), then compare.
 
 | Metric | Single-agent, no KG | Single-agent, with KG | Multi-agent, no KG | Multi-agent, with KG |
 |---|---|---|---|---|
-| Context precision* | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
-| Faithfulness* | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
-| Answer relevancy | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
+| Context precision* | 0.753 | 0.767 | _not run_ | _not run_ |
+| Faithfulness* | 1.0 | 1.0 | _not run_ | _not run_ |
+| Answer relevancy | 0.782 | 0.803 | _not run_ | _not run_ |
 | Answer correctness | not computable without reference | not computable without reference | not computable without reference | not computable without reference |
-| Avg. latency (s) | _TBD_ | _TBD_ | _TBD_ | _TBD_ (expect higher: extra tool calls) |
+| Avg. latency (s) | 9.051 | 9.982 | _not run_ | _not run_ (expect higher -- extra tool calls) |
 
 ## Discussion
 

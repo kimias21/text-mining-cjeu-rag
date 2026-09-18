@@ -214,7 +214,7 @@
   },
   {
     "json_file": "agricultural/C-160.21 and C-217.21.json",
-    "case_number": "C-160/21, C-217/21",
+    "case_number": "C-160/21 and C-217/21",
     "case_numbers": [
       "C-160/21",
       "C-217/21"
@@ -459,7 +459,7 @@
   },
   {
     "json_file": "agricultural/C-199.18, C-200.18 and C-343.18.json",
-    "case_number": "C-199/18, C-200/18, C-343/18",
+    "case_number": "C-199/18, C-200/18 and C-343/18",
     "case_numbers": [
       "C-199/18",
       "C-200/18",
@@ -655,9 +655,9 @@
   },
   {
     "json_file": "agricultural/C-228.24.json",
-    "case_number": "C-228/24",
+    "case_number": "C-228/23",
     "case_numbers": [
-      "C-228/24"
+      "C-228/23"
     ],
     "celex_number": "62023CJ0228",
     "date_of_judgment": "2024-10-04",
@@ -1002,7 +1002,7 @@
   },
   {
     "json_file": "agricultural/C-294.19 and C-304.19.json",
-    "case_number": "C-294/19, C-304/19",
+    "case_number": "C-294/19 and C-304/19",
     "case_numbers": [
       "C-294/19",
       "C-304/19"
@@ -1093,7 +1093,7 @@
   },
   {
     "json_file": "agricultural/C-309.22 and C-310.22.json",
-    "case_number": "C-309/22, C-310/22",
+    "case_number": "C-309/22 and C-310/22",
     "case_numbers": [
       "C-309/22",
       "C-310/22"
@@ -1651,7 +1651,7 @@
   },
   {
     "json_file": "agricultural/C-364.24 and C-393.24.json",
-    "case_number": "C-364/24, C-393/24",
+    "case_number": "C-364/24 and C-393/24",
     "case_numbers": [
       "C-364/24",
       "C-393/24"
@@ -2452,7 +2452,7 @@
   },
   {
     "json_file": "agricultural/C-501.22 and C-504.22.json",
-    "case_number": "C-501/22, C-504/22",
+    "case_number": "C-501/22 to C-504/22",
     "case_numbers": [
       "C-501/22",
       "C-504/22"
@@ -2856,7 +2856,7 @@
   },
   {
     "json_file": "agricultural/C-573.18 and C-574.18.json",
-    "case_number": "C-573/18, C-574/18",
+    "case_number": "C-573/18 and C-574/18",
     "case_numbers": [
       "C-573/18",
       "C-574/18"
@@ -4176,7 +4176,7 @@
   },
   {
     "json_file": "environmental/C-105.18 and C-113.18.json",
-    "case_number": "C-105/18, C-113/18",
+    "case_number": "C-105/18 to C-113/18",
     "case_numbers": [
       "C-105/18",
       "C-113/18"
@@ -4546,7 +4546,7 @@
   },
   {
     "json_file": "environmental/C-180.18, C-286.18 and C-287.18.json",
-    "case_number": "C-180/18, C-286/18, C-287/18",
+    "case_number": "C-180/18, C-286/18 and C-287/18",
     "case_numbers": [
       "C-180/18",
       "C-286/18",
@@ -4710,9 +4710,9 @@
   },
   {
     "json_file": "environmental/C-21.29 and 23.19.json",
-    "case_number": "C-21/29, C-23/19",
+    "case_number": "C-21/19 to C-23/19",
     "case_numbers": [
-      "C-21/29",
+      "C-21/19",
       "C-23/19"
     ],
     "celex_number": "62019CJ0021",
@@ -4803,7 +4803,7 @@
   },
   {
     "json_file": "environmental/C-221.24 and 222.24.json",
-    "case_number": "C-221/24, C-222/24",
+    "case_number": "C-221/24 and C-222/24",
     "case_numbers": [
       "C-221/24",
       "C-222/24"
@@ -5139,7 +5139,7 @@
   },
   {
     "json_file": "environmental/C-256.23 and C-290.23.json",
-    "case_number": "C-256/23, C-290/23",
+    "case_number": "C-256/23 and C-290/23",
     "case_numbers": [
       "C-256/23",
       "C-290/23"
@@ -5249,7 +5249,7 @@
   },
   {
     "json_file": "environmental/C-293.17 and C-294.17.json",
-    "case_number": "C-293/17, C-294/17",
+    "case_number": "C-293/17 and C-294/17",
     "case_numbers": [
       "C-293/17",
       "C-294/17"
@@ -5619,7 +5619,7 @@
   },
   {
     "json_file": "environmental/C-364.24 and C-393.24.json",
-    "case_number": "C-364/24, C-393/24",
+    "case_number": "C-364/24 and C-393/24",
     "case_numbers": [
       "C-364/24",
       "C-393/24"
@@ -6130,7 +6130,7 @@
   },
   {
     "json_file": "environmental/C-473.19 and C-474.19.json",
-    "case_number": "C-473/19, C-474/19",
+    "case_number": "C-473/19 and C-474/19",
     "case_numbers": [
       "C-473/19",
       "C-474/19"
@@ -6179,7 +6179,7 @@
   },
   {
     "json_file": "environmental/C-487.17 and C-489.17.json",
-    "case_number": "C-487/17, C-489/17",
+    "case_number": "C-487/17 to C-489/17",
     "case_numbers": [
       "C-487/17",
       "C-489/17"
@@ -7445,7 +7445,7 @@
   },
   {
     "json_file": "environmental/C-798.18 and 799.18.json",
-    "case_number": "C-798/18, C-799/18",
+    "case_number": "C-798/18 and C-799/18",
     "case_numbers": [
       "C-798/18",
       "C-799/18"
@@ -7472,7 +7472,7 @@
   },
   {
     "json_file": "environmental/C-80.18 and C-83.18.json",
-    "case_number": "C-80/18, C-83/18",
+    "case_number": "C-80/18 to C-83/18",
     "case_numbers": [
       "C-80/18",
       "C-83/18"

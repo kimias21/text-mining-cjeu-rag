@@ -130,11 +130,37 @@ def extract_keywords_line(soup):
     return None
 
 
-def extract_case_number_from_text(full_text, fallback):
-    m = re.search(r"In Case[s]?\s+(C[\u2011\-‑]\d+/\d+(?:\s+and\s+C[\u2011\-‑]\d+/\d+)*)", full_text)
-    if m:
-        return re.sub(r"[\u2011‑]", "-", m.group(1)).replace(" ", " ")
-    return ", ".join(fallback)
+def extract_case_number_from_text(full_text):
+    # Bug fix: the header for joined cases reads "In Joined Cases C-x/y, C-w/z
+    # and C-a/b," -- the old pattern only matched "In Case(s)" (missing
+    # "Joined") and only understood " and "-separated lists, so every
+    # joined-case judgment (18 of them) fell through to a
+    # ", ".join(fallback) elsewhere, whose separator doesn't match the
+    # "and"-style separator used for multi-case citations in the rest of
+    # the corpus. Now handles "Joined" and all three separators actually
+    # used: ", ", " and " and " to " (e.g. "C-105/18 to C-113/18").
+    #
+    # NB: the character between "C" and the digits is NOT a plain ASCII
+    # hyphen in this corpus -- it's U+2010 (HYPHEN) or occasionally U+2013
+    # (EN DASH), never the U+2011 (non-breaking hyphen) the original regex
+    # checked for. That meant the old regex never matched ANYTHING, for
+    # any judgment in the corpus -- invisible for single-case judgments
+    # only because the ", ".join(fallback) branch happens to produce an
+    # identical single-element string. The class below matches every dash
+    # variant actually present (same class build_graph.py's
+    # CASE_NUMBER_RE already uses).
+    #
+    # Returns (display_string, [individual case numbers]) parsed straight
+    # from the judgment's own header, or (None, None) if the header
+    # doesn't match this shape (caller should fall back to the filename).
+    case_num = r"C[\-\u2010\u2011\u2012\u2013\u2014]\d+/\d+"
+    sep = r"(?:,\s*|\s+and\s+|\s+to\s+)"
+    m = re.search(rf"In (?:Joined )?Case[s]?\s+({case_num}(?:{sep}{case_num})*)", full_text)
+    if not m:
+        return None, None
+    display = re.sub(r"[\u2010\u2011\u2012\u2013\u2014]", "-", m.group(1)).replace(" ", " ")
+    individual = re.findall(r"C-\d+/\d+", display)
+    return display, individual
 
 
 def extract_referring_court(full_text):
@@ -216,8 +242,20 @@ def parse_judgment(path: Path, domain_hint: str):
     paragraphs = extract_paragraphs(soup)
     full_text = normalize_ws(soup.get_text("\n"))
 
-    case_numbers = get_case_numbers_from_filename(path)
-    case_number_str = extract_case_number_from_text(full_text, case_numbers)
+    # Bug fix: the HTML filename is occasionally mislabeled (e.g.
+    # "C-228.24.html" whose own judgment text -- and CELEX id 62023CJ0228 --
+    # both say it's actually C-228/23, the AFAÏA case). The judgment's own
+    # header text is the authoritative source, so prefer it and its
+    # individual case numbers over the filename whenever it parses; only
+    # fall back to the filename-derived numbers when the header doesn't
+    # match the expected "In [Joined] Case(s) ..." shape at all.
+    filename_case_numbers = get_case_numbers_from_filename(path)
+    case_number_str, text_case_numbers = extract_case_number_from_text(full_text)
+    if case_number_str is not None:
+        case_numbers = text_case_numbers
+    else:
+        case_number_str = ", ".join(filename_case_numbers)
+        case_numbers = filename_case_numbers
     court_info = extract_referring_court(full_text)
     operative_part = extract_operative_part(soup)
 

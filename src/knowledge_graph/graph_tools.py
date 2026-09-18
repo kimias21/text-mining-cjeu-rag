@@ -17,10 +17,11 @@ import networkx as nx
 
 GRAPH_DIR = Path(__file__).resolve().parent
 _graph = None
+_alias_index = None
 
 
 def load_graph():
-    global _graph
+    global _graph, _alias_index
     if _graph is None:
         gpickle = GRAPH_DIR / "graph.gpickle"
         gjson = GRAPH_DIR / "graph.json"
@@ -32,6 +33,18 @@ def load_graph():
             raise FileNotFoundError(
                 "No graph found -- run `python build_graph.py` in src/knowledge_graph/ first."
             )
+        # Bug fix: a joined-case judgment's node id is a compound string
+        # ("C-293/17 and C-294/17"), but callers (the agent, or a case
+        # number typed by a user) only ever supply ONE individual number
+        # ("C-293/17"). build_graph.py now stores each Judgment node's
+        # individual case numbers under its `aliases` attribute -- index
+        # them here once so a lookup by any individual number resolves to
+        # the right node instead of returning "not found".
+        _alias_index = {}
+        for node, data in _graph.nodes(data=True):
+            if data.get("type") == "Judgment":
+                for alias in data.get("aliases") or [node]:
+                    _alias_index[alias] = node
     return _graph
 
 
@@ -43,6 +56,7 @@ def expand_via_graph(case_number: str, relation: str = None, max_results: int = 
     `relation` ("cites", "cited_by", "shares_provision", "shares_principle").
     """
     G = load_graph()
+    case_number = _alias_index.get(case_number, case_number)
     if case_number not in G:
         return [{"error": f"'{case_number}' not found in the knowledge graph."}]
 

@@ -1,6 +1,6 @@
 {
   "n_nodes": 2897,
-  "n_edges": 14221,
+  "n_edges": 14250,
   "node_types": {
     "Judgment": 273,
     "LegalDomain": 2,
@@ -18,7 +18,7 @@
     "decided_by": 273,
     "interprets_instrument": 1485,
     "interprets": 5476,
-    "cites": 296,
+    "cites": 325,
     "belongs_to": 5476,
     "invokes": 238
   }

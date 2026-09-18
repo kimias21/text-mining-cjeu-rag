@@ -87,18 +87,29 @@ def build_graph() -> nx.MultiDiGraph:
     G = nx.MultiDiGraph()
 
     docs = {}
+    # Bug fix (companion to the parse_judgments.py joined-case regex fix):
+    # a joined-case judgment's canonical `case_number` is a compound string
+    # ("C-293/17 and C-294/17"), but agents and other judgments' citation
+    # text only ever refer to ONE of the individual numbers ("C-293/17").
+    # Without this alias index, expand_via_graph("C-293/17") and any
+    # citation pointing at that individual number silently fail to resolve
+    # to the joined judgment's node, for all 18 joined-case judgments.
+    alias_to_canonical = {}
     for sub in ("agricultural", "environmental"):
         for f in (JSON_ROOT / sub).glob("*.json"):
             doc = json.loads(f.read_text(encoding="utf-8"))
             case_number = doc["metadata"].get("case_number")
             if case_number:
                 docs[case_number] = doc
+                for alias in doc["metadata"].get("case_numbers") or [case_number]:
+                    alias_to_canonical[alias] = case_number
 
     all_case_numbers = set(docs.keys())
 
     for case_number, doc in docs.items():
         meta = doc["metadata"]
-        G.add_node(case_number, type="Judgment",
+        own_aliases = meta.get("case_numbers") or [case_number]
+        G.add_node(case_number, type="Judgment", aliases=own_aliases,
                     date=meta.get("date_of_judgment"), celex=meta.get("celex_number"))
 
         domain = meta.get("legal_domain")
@@ -139,8 +150,15 @@ def build_graph() -> nx.MultiDiGraph:
             G.add_node(principle, type="LegalPrinciple")
             G.add_edge(case_number, principle, relation="invokes")
 
-        for cited in extract_citations(doc["text"], {case_number}):
-            if cited in all_case_numbers:  # only link citations we can resolve within our corpus
+        # Exclude every one of THIS judgment's own individual case numbers
+        # (not just the compound canonical string) so a joined judgment
+        # whose own text repeats one of its own numbers doesn't cite itself.
+        for cited_raw in extract_citations(doc["text"], set(own_aliases) | {case_number}):
+            # Resolve an individual case number (e.g. "C-293/17") to the
+            # canonical, possibly-compound node key of the judgment it
+            # belongs to, so citations INTO joined-case judgments resolve.
+            cited = alias_to_canonical.get(cited_raw, cited_raw)
+            if cited in all_case_numbers and cited != case_number:  # only link citations we can resolve within our corpus
                 G.add_node(cited, type="Judgment")
                 G.add_edge(case_number, cited, relation="cites")
 
