@@ -63,11 +63,11 @@ directly into this table's section below.
 
 | Metric | Single-agent, no KG | Single-agent, with KG | Multi-agent, no KG | Multi-agent, with KG |
 |---|---|---|---|---|
-| Context precision* | 0.753 | 0.767 | _not run_ | _not run_ |
-| Faithfulness* | 1.0 | 1.0 | _not run_ | _not run_ |
-| Answer relevancy | 0.782 | 0.803 | _not run_ | _not run_ |
+| Context precision* | 0.753 | 0.767 | 0.695 | 0.747 |
+| Faithfulness* | 1.0 | 1.0 | 1.0 | 0.95 |
+| Answer relevancy | 0.782 | 0.803 | 0.797 | 0.792 |
 | Answer correctness | not computable without reference | not computable without reference | not computable without reference | not computable without reference |
-| Avg. latency (s) | 9.051 | 9.982 | _not run_ | _not run_ (expect higher -- extra tool calls) |
+| Avg. latency (s) | 9.051 | 9.982 | 23.204 | 21.489 (expect higher -- extra tool calls) |
 
 ## Discussion
 
