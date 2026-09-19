@@ -94,5 +94,5 @@ python build_graph.py
 ## Evaluation
 
 Official evaluation uses RAGAS against 20 hidden-ground-truth questions (see the exam guide's
-Appendix). Submit results as `results_exam_june_2026/results.xlsx` with columns: Question,
-Answer, Context retrieved.
+Appendix). Submit results as `results_exam_june_2026/results_single_agent.xlsx` and
+`results_multi_agent.xlsx` with columns: Question, Answer, Context retrieved.

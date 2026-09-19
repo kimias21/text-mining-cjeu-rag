@@ -53,10 +53,13 @@ proxy for iterating during development, not a substitute.
 
 The guide asks for RAGAS metrics obtained **with and without** the
 Knowledge Graph, so its actual contribution can be assessed rather than
-assumed. To produce this: run `batch_run.py` once with
-`src/knowledge_graph/graph.json` absent/unbuilt (the `expand_via_graph`
-tool is simply not offered to the agents in that case) and once with it
-built (`python src/knowledge_graph/build_graph.py` first), then compare.
+assumed. To produce this: build the graph once (`python
+src/knowledge_graph/build_graph.py`), then, from `src/evaluation/`, run
+`python run_kg_ablation.py` (add `--systems single_agent` to run just one
+architecture instead of both). The script runs each system once with
+`DISABLE_KG=1` (the `expand_via_graph` tool withheld) and once with the KG
+available, computes the proxy metrics for each, and writes the results
+directly into this table's section below.
 
 | Metric | Single-agent, no KG | Single-agent, with KG | Multi-agent, no KG | Multi-agent, with KG |
 |---|---|---|---|---|

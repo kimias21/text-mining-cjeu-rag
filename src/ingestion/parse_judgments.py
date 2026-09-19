@@ -14,6 +14,8 @@ import unicodedata
 from pathlib import Path
 from bs4 import BeautifulSoup
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
 # ---------------------------------------------------------------------------
 # Reference tables (used for lightweight, rule-based first-pass tagging;
 # meant to be refined later, not treated as ground truth)
@@ -331,9 +333,10 @@ def patch_cross_domain(agri_dir: Path, env_dir: Path):
 
 
 if __name__ == "__main__":
-    base = Path("/home/claude/work")
-    agri_meta, agri_err = process_corpus(base / "agri", base / "json" / "agricultural", "agricultural")
-    env_meta, env_err = process_corpus(base / "env", base / "json" / "environmental", "environmental")
+    html_dir = REPO_ROOT / "data" / "html"
+    json_dir = REPO_ROOT / "data" / "json"
+    agri_meta, agri_err = process_corpus(html_dir / "agricultural", json_dir / "agricultural", "agricultural")
+    env_meta, env_err = process_corpus(html_dir / "environmental", json_dir / "environmental", "environmental")
 
     print(f"Agricultural: {len(agri_meta)} parsed, {len(agri_err)} errors")
     print(f"Environmental: {len(env_meta)} parsed, {len(env_err)} errors")
@@ -342,7 +345,7 @@ if __name__ == "__main__":
     if env_err:
         print("Env errors:", env_err[:5])
 
-    shared = patch_cross_domain(base / "json" / "agricultural", base / "json" / "environmental")
+    shared = patch_cross_domain(json_dir / "agricultural", json_dir / "environmental")
     print(f"Cross-domain judgments (present in both corpora): {len(shared)}")
     print(sorted(shared))
 
@@ -350,10 +353,10 @@ if __name__ == "__main__":
     # feeding the embedding & routing steps later in the pipeline.
     manifest = []
     for sub in ("agricultural", "environmental"):
-        for f in sorted((base / "json" / sub).glob("*.json")):
+        for f in sorted((json_dir / sub).glob("*.json")):
             doc = json.loads(f.read_text(encoding="utf-8"))
             manifest.append({"json_file": f"{sub}/{f.name}", **doc["metadata"]})
-    (base / "json" / "manifest.json").write_text(
+    (json_dir / "manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8"
     )
     print(f"Manifest written with {len(manifest)} entries.")
