@@ -6,6 +6,23 @@ multi_agent), logs every turn (via chat_interface/logger.py), and writes an
 Excel file matching the exam guide's required submission format exactly:
 one row per question, columns Question / Answer / Context retrieved.
 
+Resilient and resumable (fixed 2026-09-19, mirroring the same fix already
+applied to run_kg_ablation.py after it happened live twice during the KG
+ablation run): a per-question failure (an unrecoverable 503, an unexpected
+API error, anything generate_with_retry couldn't ride out) used to crash
+the WHOLE batch with an unhandled exception, and since the Excel file was
+only ever written once at the very end, that meant a single bad question
+threw away every already-answered question too -- the exported file ended
+up with zero rows despite real answers having been produced. Now:
+  - every question is wrapped in try/except; a failure is logged and
+    written as an "[ERROR ...]" row rather than crashing the run,
+  - the Excel file is rewritten after EVERY question, not just at the end,
+    so a crash/kill/lost connection loses at most the one question in
+    flight, not the whole batch,
+  - re-running the same command skips questions that already have a real
+    (non-error) answer in the existing output file, and retries only the
+    ones that are missing or previously failed.
+
 For the OFFICIAL submission: once the hidden 20 questions are released,
 replace EVAL_QUESTIONS' source (or point --questions at a JSON file with the
 same [{"id":..., "question":...}, ...] shape) and re-run for both systems.
@@ -33,6 +50,7 @@ from logger import log_turn  # noqa: E402
 from questions import EVAL_QUESTIONS  # noqa: E402
 
 DEFAULT_OUT_DIR = REPO_ROOT / "results_exam_june_2026"
+ERROR_PREFIX = "[ERROR -- system failed to answer: "
 
 
 def format_context(trace) -> str:
@@ -56,6 +74,30 @@ def format_context(trace) -> str:
     return "; ".join(seen)
 
 
+def _load_existing_rows(out_path: Path) -> dict:
+    """Map 'QID - question text' -> already-written row, from a prior
+    (possibly partial or failed) run's own output file, so a re-run skips
+    real work already done instead of re-spending API calls -- and, on the
+    free tier, re-risking the exact rate limit/503 that may have killed the
+    previous attempt. A row whose Answer is one of our own ERROR_PREFIX
+    markers is deliberately NOT included here, so a previously-failed
+    question gets retried rather than permanently skipped."""
+    if not out_path.exists():
+        return {}
+    try:
+        df = pd.read_excel(out_path)
+    except Exception as e:
+        print(f"NOTE: couldn't read existing {out_path} to resume from ({e}) -- starting fresh.")
+        return {}
+    existing = {}
+    for _, row in df.iterrows():
+        answer = row.get("Answer")
+        if isinstance(answer, str) and answer.startswith(ERROR_PREFIX):
+            continue
+        existing[str(row["Question"])] = row.to_dict()
+    return existing
+
+
 def run_batch(system: str, questions: list, out_path: Path):
     if system == "single_agent":
         from agent import SingleAgent
@@ -66,25 +108,50 @@ def run_batch(system: str, questions: list, out_path: Path):
     else:
         raise ValueError("system must be 'single_agent' or 'multi_agent'")
 
+    existing = _load_existing_rows(out_path)
+    if existing:
+        print(f"Resuming from {out_path} -- {len(existing)}/{len(questions)} already answered, skipping those.")
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     rows = []
+    failures = []
+
     for q in questions:
+        key = f"{q['id']} - {q['question']}"
+        if key in existing:
+            rows.append(existing[key])
+            continue
+
         print(f"[{system}] {q['id']}: {q['question'][:80]}...")
         start = time.time()
-        result = agent.answer(q["question"])
-        latency = time.time() - start
-        log_turn(system, q["question"], result, latency)
+        try:
+            result = agent.answer(q["question"])
+            latency = time.time() - start
+            log_turn(system, q["question"], result, latency)
+            answer = result.get("answer", "")
+            context = "; ".join(result.get("sources") or []) or format_context(result.get("trace"))
+            print(f"    -> {latency:.1f}s, sources: {result.get('sources')}")
+        except Exception as e:
+            latency = time.time() - start
+            print(f"    !! FAILED after {latency:.1f}s: {e}")
+            log_turn(system, q["question"],
+                     {"answer": None, "sources": [], "trace": [{"type": "error", "content": str(e)}]},
+                     latency)
+            answer = f"{ERROR_PREFIX}{e}]"
+            context = ""
+            failures.append(q["id"])
 
-        rows.append({
-            "Question": f"{q['id']} - {q['question']}",
-            "Answer": result.get("answer", ""),
-            "Context retrieved": "; ".join(result.get("sources") or []) or format_context(result.get("trace")),
-        })
-        print(f"    -> {latency:.1f}s, sources: {result.get('sources')}")
+        rows.append({"Question": key, "Answer": answer, "Context retrieved": context})
 
-    df = pd.DataFrame(rows, columns=["Question", "Answer", "Context retrieved"])
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_excel(out_path, index=False)
-    print(f"\nWrote {len(rows)} rows -> {out_path}")
+        # Rewrite after every question (cheap for 20 rows) so the file on
+        # disk always reflects real progress -- see the module docstring.
+        pd.DataFrame(rows, columns=["Question", "Answer", "Context retrieved"]).to_excel(out_path, index=False)
+
+    if failures:
+        print(f"\nWrote {len(rows)} rows -> {out_path} "
+              f"({len(failures)} FAILED: {', '.join(failures)} -- re-run the same command to retry just those)")
+    else:
+        print(f"\nWrote {len(rows)} rows -> {out_path} (complete)")
 
 
 if __name__ == "__main__":
