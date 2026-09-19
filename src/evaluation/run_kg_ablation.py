@@ -289,7 +289,19 @@ def main():
                 complete += f", {r['n_failed']} FAILED (check the error messages above -- often an API key/rate-limit issue)"
             print(f"{system}/{condition} ({complete}): {r}")
 
-    _update_performance_table(results)
+    # Bug fix (found live 2026-09-19): the table update used to be built
+    # from `results`, which only has entries for the system/condition pairs
+    # THIS invocation targeted via --systems/--conditions. Since
+    # _update_performance_table() always rewrites all four columns, running
+    # e.g. `--systems multi_agent` blanked the single-agent columns back to
+    # "_not run_" even though their real numbers were sitting untouched in
+    # logs/kg_ablation_single_agent_*.jsonl -- this actually happened and
+    # wiped out real results. _aggregate() reads straight from the log
+    # files on disk, so recomputing it for ALL FOUR combinations here (not
+    # just the ones this run touched) reflects whatever's really been run
+    # so far, no matter how narrowly this particular invocation was scoped.
+    table_results = {(s, c): _aggregate(s, c) for s in SYSTEMS for c in CONDITIONS}
+    _update_performance_table(table_results)
 
 
 if __name__ == "__main__":
