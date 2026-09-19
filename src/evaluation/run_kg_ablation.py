@@ -165,17 +165,23 @@ def _aggregate(system: str, condition: str):
         return None
 
     rows = [metrics.compute_all(e) for e in entries]
+    # Exclude turns whose agent call itself failed (bad API key, rate
+    # limit, ...) from every quality average, including abstention rate --
+    # a technical failure isn't a real "didn't abstain" data point, and
+    # folding it in would silently understate the system's real behavior.
+    ok_rows = [r for r in rows if not r["failed"]]
 
     def avg(key):
-        vals = [r[key] for r in rows if r.get(key) is not None]
+        vals = [r[key] for r in ok_rows if r.get(key) is not None]
         return round(sum(vals) / len(vals), 3) if vals else None
 
     return {
         "n_questions": len(rows),
+        "n_failed": len(rows) - len(ok_rows),
         "citation_consistency": avg("citation_consistency"),
         "context_utilization": avg("context_utilization"),
         "answer_relevancy": avg("answer_relevancy"),
-        "abstention_rate": round(sum(1 for r in rows if r["abstained"]) / len(rows), 3),
+        "abstention_rate": round(sum(1 for r in ok_rows if r["abstained"]) / len(ok_rows), 3) if ok_rows else None,
         "avg_latency_seconds": avg("latency_seconds"),
     }
 
@@ -279,6 +285,8 @@ def main():
             print(f"{system}/{condition}: nothing logged yet")
         else:
             complete = "complete" if r["n_questions"] >= 20 else f"PARTIAL, {r['n_questions']}/20"
+            if r.get("n_failed"):
+                complete += f", {r['n_failed']} FAILED (check the error messages above -- often an API key/rate-limit issue)"
             print(f"{system}/{condition} ({complete}): {r}")
 
     _update_performance_table(results)

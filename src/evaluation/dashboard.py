@@ -82,9 +82,17 @@ if logs:
             "question": entry["question"][:80] + ("..." if len(entry["question"]) > 80 else ""),
             "citation_consistency": m["citation_consistency"],
             "context_utilization": m["context_utilization"],
-            "answer_relevancy": round(m["answer_relevancy"], 3),
-            "abstained": m["abstained"], "num_sources": m["num_sources"],
+            # answer_relevancy is None for a turn whose agent call itself
+            # failed (see metrics.compute_all) -- round() would crash on
+            # None, so only round a real value.
+            "answer_relevancy": round(m["answer_relevancy"], 3) if m["answer_relevancy"] is not None else None,
+            # A failed turn isn't a real "didn't abstain" -- leave it as a
+            # missing value so groupby(...).mean() skips it below instead
+            # of silently diluting the abstention rate.
+            "abstained": None if m["failed"] else m["abstained"],
+            "num_sources": m["num_sources"],
             "latency_seconds": m["latency_seconds"],
+            "failed": m["failed"],
         })
     df = pd.DataFrame(rows)
 

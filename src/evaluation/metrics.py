@@ -76,8 +76,17 @@ def context_utilization(answer: str, trace: list) -> float | None:
     return len(retrieved & cited) / len(retrieved)
 
 
-def answer_relevancy(question: str, answer: str) -> float:
-    """Cosine similarity between question and answer embeddings."""
+def answer_relevancy(question: str, answer: str) -> float | None:
+    """Cosine similarity between question and answer embeddings. Returns
+    None (undefined, not 0) when there's no answer to embed -- e.g. a turn
+    whose agent call itself failed and was logged with answer=None (see the
+    per-question error handling in batch_run.py / run_kg_ablation.py). Bug
+    fix 2026-09-19: this used to pass None straight to the embedder, which
+    crashed with 'Unsupported input type: NoneType' and took down the
+    whole aggregation -- including every already-succeeded question in the
+    same run -- the moment a single question failed."""
+    if not answer:
+        return None
     model = _get_embedder()
     import numpy as np
     vecs = model.encode([question, answer], normalize_embeddings=True, convert_to_numpy=True)
@@ -90,15 +99,26 @@ def looks_like_abstention(answer: str) -> bool:
 
 
 def compute_all(entry: dict) -> dict:
-    """Compute every ground-truth-free metric for one logged turn."""
-    answer, sources, trace = entry.get("answer", ""), entry.get("sources", []), entry.get("trace", [])
+    """Compute every ground-truth-free metric for one logged turn.
+
+    A turn whose agent call itself failed (answer is None -- the
+    per-question error handling in batch_run.py / run_kg_ablation.py logs
+    exactly this shape) is flagged via "failed": True, and its quality
+    metrics come back as None/False rather than being computed from a
+    missing answer: a technical failure (bad API key, rate limit, ...)
+    says nothing about answer quality, and averaging it in as if it were a
+    real "no" would understate whatever the system actually did on the
+    questions it could answer."""
+    answer, sources, trace = entry.get("answer"), entry.get("sources", []), entry.get("trace", [])
+    failed = answer is None
     return {
         "citation_consistency": citation_consistency(answer, sources),
         "context_utilization": context_utilization(answer, trace),
         "answer_relevancy": answer_relevancy(entry.get("question", ""), answer),
-        "abstained": looks_like_abstention(answer),
+        "abstained": False if failed else looks_like_abstention(answer),
         "num_sources": len(sources or []),
         "latency_seconds": entry.get("latency_seconds"),
+        "failed": failed,
     }
 
 
