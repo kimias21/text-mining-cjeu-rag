@@ -98,13 +98,24 @@ def _run_worker(system: str, condition: str):
     # gemini_utils.generate_with_retry, but no reason to waste API calls
     # re-doing questions that already succeeded). Delete the log file
     # yourself first if you want a genuinely clean re-run.
+    #
+    # Bug fix (found live 2026-09-19): this used to mark a question "done"
+    # just because SOME entry for it existed in the log, whether or not
+    # that entry actually succeeded. A run that failed all 20 questions on
+    # an invalid API key then got permanently stuck: every re-run treated
+    # all 20 as already logged and skipped them, so fixing the key and
+    # re-running never actually retried anything -- exactly what happened
+    # to the with_kg batch here. Now only a real (non-null) answer counts
+    # as done, matching batch_run.py's already-correct _load_existing_rows.
     already_done = set()
     if log_path.exists():
         for line in log_path.read_text(encoding="utf-8").splitlines():
             if line.strip():
-                already_done.add(json.loads(line)["question"])
+                entry = json.loads(line)
+                if entry.get("answer") is not None:
+                    already_done.add(entry["question"])
         if already_done:
-            print(f"[{system}/{condition}] resuming -- {len(already_done)}/20 already logged, skipping those", flush=True)
+            print(f"[{system}/{condition}] resuming -- {len(already_done)}/20 already answered, skipping those", flush=True)
 
     for q in EVAL_QUESTIONS:
         if q["question"] in already_done:
@@ -160,9 +171,19 @@ def _aggregate(system: str, condition: str):
     log_path = _log_path(system, condition)
     if not log_path.exists():
         return None
-    entries = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()]
-    if not entries:
+    all_entries = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    if not all_entries:
         return None
+    # The log is append-only, so a question that failed and was later
+    # retried (see the resume fix above) appears twice: once with
+    # answer=None, once with the real answer. Dedupe by question, keeping
+    # the LAST entry for each -- the most recent attempt is the one that
+    # should count, whether that's a fresh success or, if it failed again,
+    # the latest failure.
+    by_question = {}
+    for e in all_entries:
+        by_question[e["question"]] = e
+    entries = list(by_question.values())
 
     rows = [metrics.compute_all(e) for e in entries]
     # Exclude turns whose agent call itself failed (bad API key, rate
